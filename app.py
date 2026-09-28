@@ -268,6 +268,18 @@ class ResearchApp:
 
 
 def main():
+    if "--self-test" in sys.argv:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.goto("data:text/html,<title>browser-ready</title>")
+                if page.title() != "browser-ready":
+                    raise RuntimeError("Chromium did not load the test page")
+            finally:
+                browser.close()
+        return
     root = tk.Tk()
     ResearchApp(root)
     if "--smoke" in sys.argv:

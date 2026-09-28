@@ -33,8 +33,13 @@ jobs:
           pyinstaller --noconfirm --onedir --windowed --name GDPR-Research --collect-all playwright app.py
           mkdir dist\GDPR-Research\data
           copy data\top100.json dist\GDPR-Research\data\top100.json
-          dist\GDPR-Research\GDPR-Research.exe --smoke
-          if errorlevel 1 exit /b 1
+      - name: Test packaged window and browser
+        shell: pwsh
+        run: |
+          foreach ($mode in @('--smoke', '--self-test')) {
+            $result = Start-Process -FilePath 'dist/GDPR-Research/GDPR-Research.exe' -ArgumentList $mode -Wait -PassThru
+            if ($result.ExitCode -ne 0) { throw "Packaged app failed $mode with exit code $($result.ExitCode)" }
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: GDPR-Research-Windows
