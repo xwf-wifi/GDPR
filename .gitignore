@@ -1,3 +1,6 @@
 __pycache__/
 .venv/
 results/
+reports/
+data/site_claims.csv
+data/cookie_reviews.csv

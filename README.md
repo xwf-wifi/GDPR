@@ -19,6 +19,10 @@ For the Baidu pilot, run `python collect.py --domain baidu.com`, then `python an
 
 Evidence collected before the response-header fix lacks `set_cookie_detection`. For those files the analyzer reports the `Set-Cookie` response count as unknown, even if the old collector recorded zero. Re-run collection with the current script to measure that field.
 
+## CSV tables
+
+Run `python export_csv.py` after collection. It creates two **local review templates** (`data/site_claims.csv` for policy claims and `data/cookie_reviews.csv` for cookie purposes) and two Excel-compatible exports (`reports/site_summary.csv` and `reports/cookie_inventory.csv`). Edit the review templates, then re-run the exporter to merge those annotations into the reports. Existing review entries are preserved and newly observed cookies are appended. `not_reviewed`/`unreviewed` means no human conclusion yet; `inconclusive` is not a compliance verdict. Record policy URLs, short verified excerpts and review dates; classify cookie purposes only with evidence. The CSVs omit raw cookie values and full request URLs, but names, domains, policy notes, and excerpts still need review before sharing. Local review templates and reports are ignored by Git.
+
 ## Research protocol
 
 1. **Sample:** retain all 100 Tranco ranks, even if some are infrastructure domains. Mark `not_user_facing`, `blocked`, `unreachable`, or `observed` separately; do not replace ranks silently. Record date, list ID, browser version, IP country (verified externally), locale, site URL, redirect, and whether the page was accessible. Browser timezone/locale do **not** establish an EU IP location. Use an authorized EU network exit if the study targets EU visitors.
