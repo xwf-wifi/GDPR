@@ -53,13 +53,19 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("results"))
     parser.add_argument("--limit", type=int, default=1, help="Start with one site; use 100 for the full sample")
     parser.add_argument("--start-rank", type=int, default=1)
+    parser.add_argument("--domain", help="Collect one exact domain from the committed Tranco sample")
     parser.add_argument("--timeout-ms", type=int, default=20000)
     parser.add_argument("--headed", action="store_true")
     args = parser.parse_args()
     if args.limit < 1 or args.start_rank < 1:
         parser.error("limit and start-rank must be positive")
     sites = json.loads(args.sites.read_text(encoding="utf-8"))["sites"]
-    selected = [site for site in sites if site["rank"] >= args.start_rank][: args.limit]
+    if args.domain:
+        selected = [site for site in sites if site["domain"] == args.domain.lower()]
+        if not selected:
+            parser.error("domain is not in data/top100.json")
+    else:
+        selected = [site for site in sites if site["rank"] >= args.start_rank][: args.limit]
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=not args.headed)
         try:
