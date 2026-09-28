@@ -32,18 +32,18 @@ jobs:
           $env:PLAYWRIGHT_BROWSERS_PATH = '0'
           $browserDir = python -c "import pathlib, playwright; print(pathlib.Path(playwright.__file__).parent / 'driver' / 'package' / '.local-browsers')"
           if (-not (Test-Path $browserDir)) { throw "Playwright browser missing: $browserDir" }
-          pyinstaller --noconfirm --onedir --windowed --name GDPR-Research --collect-all playwright --add-data "${browserDir};playwright/driver/package/.local-browsers" app.py
-          New-Item -ItemType Directory -Force dist/GDPR-Research/data | Out-Null
-          Copy-Item data/top100.json dist/GDPR-Research/data/top100.json
+          pyinstaller --noconfirm --onedir --windowed --name GDPR-Research-v2 --collect-all playwright --add-data "${browserDir};playwright/driver/package/.local-browsers" app.py
+          New-Item -ItemType Directory -Force dist/GDPR-Research-v2/data | Out-Null
+          Copy-Item data/top100.json dist/GDPR-Research-v2/data/top100.json
       - name: Test packaged window and browser
         shell: pwsh
         run: |
-          if (-not (Get-ChildItem dist/GDPR-Research/_internal/playwright/driver/package/.local-browsers -Recurse -Filter chrome-headless-shell.exe)) { throw 'Bundled Chromium missing' }
+          if (-not (Get-ChildItem dist/GDPR-Research-v2/_internal/playwright/driver/package/.local-browsers -Recurse -Filter chrome-headless-shell.exe)) { throw 'Bundled Chromium missing' }
           foreach ($mode in @('--smoke', '--self-test')) {
-            $result = Start-Process -FilePath 'dist/GDPR-Research/GDPR-Research.exe' -ArgumentList $mode -Wait -PassThru
+            $result = Start-Process -FilePath 'dist/GDPR-Research-v2/GDPR-Research-v2.exe' -ArgumentList $mode -Wait -PassThru
             if ($result.ExitCode -ne 0) { throw "Packaged app failed $mode with exit code $($result.ExitCode)" }
           }
       - uses: actions/upload-artifact@v4
         with:
-          name: GDPR-Research-Windows
-          path: dist/GDPR-Research/
+          name: GDPR-Research-Windows-v2
+          path: dist/GDPR-Research-v2/
