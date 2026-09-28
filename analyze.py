@@ -47,7 +47,7 @@ def review(evidence):
         "reason": (
             "Collection failed or was incomplete; inspect local evidence."
             if not complete else
-            "A fresh visit only shows observations. Classify cookie purposes, verify the EU network location, "
+            "A fresh visit only shows observations. Classify cookie purposes, record the actual network location, "
             "inspect the banner visually, and compare reject/accept/withdraw scenarios before assessment."
         ),
         "note": "No cookie values, page text, request URLs or storage values are included. "
