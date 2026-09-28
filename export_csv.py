@@ -9,7 +9,7 @@ from analyze import review
 
 
 CLAIM_FIELDS = ["rank", "domain", "policy_url", "claim_status", "claim_source_url", "claim_excerpt", "reviewed_at", "notes"]
-SITE_FIELDS = CLAIM_FIELDS + ["collection_status", "collected_at_utc", "http_status", "cookie_count", "local_storage_count", "session_storage_count", "set_cookie_response_count", "external_request_hosts", "consent_words_in_excerpt", "cookie_assessment"]
+SITE_FIELDS = CLAIM_FIELDS + ["collection_status", "collected_at_utc", "http_status", "screenshot_path", "cookie_count", "local_storage_count", "session_storage_count", "set_cookie_response_count", "external_request_hosts", "consent_words_in_excerpt", "cookie_assessment"]
 COOKIE_FIELDS = ["rank", "domain", "scenario", "cookie_name", "cookie_domain", "cookie_path", "expires", "http_only", "secure", "same_site", "purpose", "purpose_source_url", "classification_status"]
 COOKIE_REVIEW_FIELDS = ["rank", "domain", "scenario", "cookie_name", "cookie_domain", "cookie_path", "purpose", "purpose_source_url", "classification_status"]
 COOKIE_KEY = COOKIE_REVIEW_FIELDS[:6]
@@ -55,6 +55,7 @@ def main():
                "cookie_assessment": "inconclusive"}
         evidence_path = args.results / f"{rank:03d}_{domain}" / "evidence.json"
         if evidence_path.exists():
+            screenshot_path = evidence_path.with_name("initial.png")
             evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
             summary = review(evidence)
             snapshot = evidence.get("snapshot") or {}
@@ -62,6 +63,7 @@ def main():
                 "collection_status": "captured" if summary["collection_complete"] else "error",
                 "collected_at_utc": evidence.get("started_at_utc"),
                 "http_status": summary["http_status"],
+                "screenshot_path": str(screenshot_path.resolve()) if screenshot_path.exists() else "",
                 "cookie_count": summary["observed_cookie_count"],
                 "local_storage_count": len(snapshot.get("local_storage") or {}),
                 "session_storage_count": len(snapshot.get("session_storage") or {}),
