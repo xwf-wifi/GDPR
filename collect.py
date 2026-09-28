@@ -23,10 +23,12 @@ def collect_site(browser, site, output_root: Path, timeout_ms: int) -> dict:
     requests = []
     responses = []
     page.on("request", lambda req: requests.append({"url": req.url, "method": req.method, "resource_type": req.resource_type}))
-    page.on("response", lambda res: responses.append({"url": res.url, "status": res.status, "set_cookie": res.headers.get("set-cookie") is not None}))
+    # response.headers intentionally omits cookie-related headers in Playwright.
+    page.on("response", lambda res: responses.append({"url": res.url, "status": res.status, "set_cookie": res.header_value("set-cookie") is not None}))
     rank, domain = site["rank"], site["domain"]
     result = {"rank": rank, "domain": domain, "started_at_utc": datetime.now(timezone.utc).isoformat(),
-              "scenario": "fresh_visit_no_interaction", "browser_locale": "en-GB", "timezone": "Europe/Brussels"}
+              "scenario": "fresh_visit_no_interaction", "browser_locale": "en-GB", "timezone": "Europe/Brussels",
+              "set_cookie_detection": "header_value"}
     site_dir = output_root / f"{rank:03d}_{domain}"
     site_dir.mkdir(parents=True, exist_ok=True)
     try:

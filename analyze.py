@@ -24,7 +24,9 @@ def review(evidence):
     request_hosts = sorted({host(x.get("url", "")) for x in evidence.get("requests", [])} - {""})
     # A hostname outside the target's domain is a lead, not proof of tracking.
     external_hosts = [h for h in request_hosts if h != domain and not h.endswith("." + domain)]
-    set_cookie_responses = sum(bool(x.get("set_cookie")) for x in evidence.get("responses", []))
+    header_capture_valid = evidence.get("set_cookie_detection") == "header_value"
+    set_cookie_responses = (sum(bool(x.get("set_cookie")) for x in evidence.get("responses", []))
+                            if header_capture_valid else None)
     complete = bool(snapshot) and not evidence.get("error")
     return {
         "rank": evidence.get("rank"),
@@ -37,6 +39,8 @@ def review(evidence):
         "local_storage_keys": sorted((snapshot.get("local_storage") or {}).keys()),
         "session_storage_keys": sorted((snapshot.get("session_storage") or {}).keys()),
         "set_cookie_response_count": set_cookie_responses,
+        "set_cookie_count_note": ("Unknown for evidence collected before the response-header fix. Recollect the site."
+                                  if not header_capture_valid else None),
         "external_request_hosts": external_hosts,
         "consent_related_words_in_excerpt": [word for word in CONSENT_WORDS if word in text],
         "assessment": "inconclusive",

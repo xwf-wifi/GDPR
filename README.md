@@ -17,6 +17,8 @@ python collect.py --limit 1
 
 For the Baidu pilot, run `python collect.py --domain baidu.com`, then `python analyze.py results/084_baidu.com/evidence.json`. The analyzer prints cookie **names and domains**, storage **keys**, response counts, and external request **hostnames**, omitting values and full URLs. Review even this summary before sharing it. Its assessment is deliberately `inconclusive`: this first-visit evidence cannot identify which cookies are necessary or prove GDPR compliance. See `demos/baidu.md` for the remaining steps.
 
+Evidence collected before the response-header fix lacks `set_cookie_detection`. For those files the analyzer reports the `Set-Cookie` response count as unknown, even if the old collector recorded zero. Re-run collection with the current script to measure that field.
+
 ## Research protocol
 
 1. **Sample:** retain all 100 Tranco ranks, even if some are infrastructure domains. Mark `not_user_facing`, `blocked`, `unreachable`, or `observed` separately; do not replace ranks silently. Record date, list ID, browser version, IP country (verified externally), locale, site URL, redirect, and whether the page was accessible. Browser timezone/locale do **not** establish an EU IP location. Use an authorized EU network exit if the study targets EU visitors.
