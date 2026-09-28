@@ -6,7 +6,7 @@ This repository contains a reproducible sample and a browser evidence collector 
 
 ### Desktop window for teammates
 
-The intended no-code path is the `GDPR-Research-Windows` ZIP attached to a successful **Build Windows desktop app** GitHub Actions run. Download and extract the whole ZIP into a writable folder, then double-click `GDPR-Research.exe`. The package is built on Windows and bundles Chromium; teammates do not need to install Python or run commands. This release path is proposed in the draft PR and still needs a successful Windows build and hands-on Windows test before distribution.
+The no-code path is the `GDPR-Research-Windows-v2` ZIP attached to a successful **Build Windows desktop app** GitHub Actions run. Download and extract the whole ZIP into a new writable folder, then double-click `GDPR-Research-v2.exe`. The package is built on Windows and bundles Chromium; teammates do not need to install Python or run commands. The automated packaged-browser test passes; a hands-on Windows website collection test is still needed before group distribution.
 
 Enter a Tranco top-100 domain or homepage URL, click **采集网站**, inspect the screenshot, fill the policy claim and Cookie purpose fields, then click the save buttons. **打开工作簿** opens the local `reports/GDPR_review.xlsx`. The app visits the domain homepage; URL paths are not part of this first pilot. It only implements the initial no-interaction visit. Data remains inside the extracted folder, and team members' separate copies do not sync automatically.
 
