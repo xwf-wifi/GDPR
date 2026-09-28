@@ -1,0 +1,39 @@
+name: Build Windows desktop app
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app.py'
+      - 'collect.py'
+      - 'export_workbook.py'
+      - 'requirements.txt'
+      - 'data/top100.json'
+      - '.github/workflows/windows-app.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install packages and browser
+        shell: cmd
+        run: |
+          python -m pip install -r requirements.txt pyinstaller
+          set PLAYWRIGHT_BROWSERS_PATH=0
+          python -m playwright install chromium
+      - name: Package the app
+        shell: cmd
+        run: |
+          python app.py --smoke
+          set PLAYWRIGHT_BROWSERS_PATH=0
+          pyinstaller --noconfirm --onedir --windowed --name GDPR-Research --collect-all playwright app.py
+          mkdir dist\GDPR-Research\data
+          copy data\top100.json dist\GDPR-Research\data\top100.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GDPR-Research-Windows
+          path: dist/GDPR-Research/

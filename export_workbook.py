@@ -85,15 +85,9 @@ def add_thumbnail(sheet, path, row):
     return True
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sites", type=Path, default=Path("data/top100.json"))
-    parser.add_argument("--results", type=Path, default=Path("results"))
-    parser.add_argument("--output", type=Path, default=Path("reports/GDPR_review.xlsx"))
-    args = parser.parse_args()
-
-    sites = json.loads(args.sites.read_text(encoding="utf-8"))["sites"]
-    site_edits, cookie_edits = saved_edits(args.output)
+def build_workbook(sites_path: Path, results_root: Path, output: Path):
+    sites = json.loads(sites_path.read_text(encoding="utf-8"))["sites"]
+    site_edits, cookie_edits = saved_edits(output)
     workbook = Workbook()
     overview = workbook.active
     overview.title = SITE_SHEET
@@ -104,7 +98,7 @@ def main():
 
     for site in sites:
         rank, domain = site["rank"], site["domain"]
-        folder = args.results / f"{rank:03d}_{domain}"
+        folder = results_root / f"{rank:03d}_{domain}"
         evidence_path = folder / "evidence.json"
         evidence = json.loads(evidence_path.read_text(encoding="utf-8")) if evidence_path.exists() else None
         snapshot = (evidence or {}).get("snapshot") or {}
@@ -137,9 +131,19 @@ def main():
     style_sheet(details, COOKIE_HEADERS, [8,22,19,28,27,15,13,13,16,36,34,17], 10)
     for sheet in (overview, details):
         sheet.auto_filter.ref = f"A1:{get_column_letter(sheet.max_column)}{sheet.max_row}"
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    workbook.save(args.output)
-    print(f"已生成 {args.output}: {len(sites)} 个网站、{collected} 个已采集、{cookie_rows} 条 Cookie、{screenshots} 张截图")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    workbook.save(output)
+    return {"sites": len(sites), "collected": collected, "cookies": cookie_rows, "screenshots": screenshots}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--sites", type=Path, default=Path("data/top100.json"))
+    parser.add_argument("--results", type=Path, default=Path("results"))
+    parser.add_argument("--output", type=Path, default=Path("reports/GDPR_review.xlsx"))
+    args = parser.parse_args()
+    counts = build_workbook(args.sites, args.results, args.output)
+    print(f"已生成 {args.output}: {counts['sites']} 个网站、{counts['collected']} 个已采集、{counts['cookies']} 条 Cookie、{counts['screenshots']} 张截图")
     print("保留了旧工作簿中的人工填写栏；不导出 Cookie 值。请先核对截图与声明，再分享工作簿。")
 
 
