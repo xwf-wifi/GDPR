@@ -16,6 +16,10 @@ from export_workbook import COOKIE_HEADERS, COOKIE_SHEET, SITE_HEADERS, SITE_SHE
 
 
 ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+# The packaged browser lives beside Playwright's bundled driver. A user does
+# not need Python, a global browser installation, or playwright install.
+if getattr(sys, "frozen", False):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
 SITES = ROOT / "data" / "top100.json"
 RESULTS = ROOT / "results"
 REPORT = ROOT / "reports" / "GDPR_review.xlsx"
