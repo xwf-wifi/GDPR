@@ -51,7 +51,7 @@ def saved_row(sheet, headers, rank, domain):
 class ResearchApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Cookie 核查工具 v2")
+        self.root.title("Cookie 核查工具 v3")
         self.root.geometry("1080x760")
         self.root.minsize(900, 620)
         self.sites = json.loads(SITES.read_text(encoding="utf-8"))["sites"]
