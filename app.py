@@ -1,8 +1,9 @@
-"""Small Windows desktop interface for collecting and reviewing Tranco sites."""
+"""Desktop interface for collecting and reviewing Tranco sites."""
 
 import json
 import os
 import queue
+import subprocess
 import sys
 import threading
 import tkinter as tk
@@ -15,14 +16,17 @@ from PIL import Image, ImageTk
 from export_workbook import COOKIE_HEADERS, COOKIE_SHEET, SITE_HEADERS, SITE_SHEET, build_workbook
 
 
-ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+FROZEN = getattr(sys, "frozen", False)
+ROOT = Path(sys.executable).resolve().parent if FROZEN else Path(__file__).resolve().parent
 # The packaged browser lives beside Playwright's bundled driver. A user does
 # not need Python, a global browser installation, or playwright install.
-if getattr(sys, "frozen", False):
+if FROZEN:
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
-SITES = ROOT / "data" / "top100.json"
-RESULTS = ROOT / "results"
-REPORT = ROOT / "reports" / "GDPR_review.xlsx"
+SITES = (Path(sys._MEIPASS) if FROZEN and sys.platform == "darwin" else ROOT) / "data" / "top100.json"
+# macOS app bundles are read-only and may launch from a translocated path.
+OUTPUT_ROOT = Path.home() / "Documents" / "GDPR-Research" if FROZEN and sys.platform == "darwin" else ROOT
+RESULTS = OUTPUT_ROOT / "results"
+REPORT = OUTPUT_ROOT / "reports" / "GDPR_review.xlsx"
 
 
 def resolve_site(value, sites):
@@ -267,6 +271,8 @@ class ResearchApp:
             build_workbook(SITES, RESULTS, REPORT)
         if sys.platform == "win32":
             os.startfile(REPORT)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["/usr/bin/open", str(REPORT)])
         else:
             messagebox.showinfo("工作簿位置", str(REPORT))
 
