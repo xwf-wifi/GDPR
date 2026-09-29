@@ -8,6 +8,10 @@ This repository contains a reproducible sample and a browser evidence collector 
 
 The no-code path is the `GDPR-Research-Windows-v3` ZIP attached to a successful **Build Windows desktop app** GitHub Actions run. Download and extract the whole ZIP into a new writable folder, then double-click `GDPR-Research-v3.exe`. The package is built on Windows and bundles Chromium; teammates do not need to install Python or run commands. The workflow downloads and tests its own artifact, including Chromium; a hands-on Windows website collection test is still needed before group distribution.
 
+### Mac app
+
+The **Build macOS desktop app** workflow offers two archives: `GDPR-Research-Mac-Apple-Silicon` for M-series Macs and `GDPR-Research-Mac-Intel` for Intel Macs. Download the matching artifact, extract the outer GitHub ZIP and then the enclosed `GDPR-Research-Mac-*.zip` using Archive Utility. Open `GDPR-Research-Mac.app` from Finder. The app saves its workbook and evidence under `~/Documents/GDPR-Research/`, outside the app bundle. It includes its own Chromium and Python dependencies. The build is not signed with an Apple Developer ID or notarized; macOS may block first launch. Only if you trust the downloaded app, follow Apple's **System Settings → Privacy & Security → Open Anyway** guidance. The CI checks the extracted archive and launches the bundled browser, but an actual Finder launch and live site collection on a teammate's Mac still need testing.
+
 Enter a Tranco top-100 domain or homepage URL, click **采集网站**, inspect the screenshot, fill the policy claim and Cookie purpose fields, then click the save buttons. **打开工作簿** opens the local `reports/GDPR_review.xlsx`. The app visits the domain homepage; URL paths are not part of this first pilot. It only implements the initial no-interaction visit. Data remains inside the extracted folder, and team members' separate copies do not sync automatically.
 
 For the current source version, install once with `setup.cmd` and then double-click `启动工具.cmd` to open the same interface. The command-line alternative remains available for troubleshooting.
