@@ -2,7 +2,34 @@
 
 This repository contains a reproducible sample and a browser evidence collector for studying cookie consent on the Tranco top 100 domains. It does **not** issue automated legal verdicts. A domain may be an API, CDN, inaccessible page, or serve different content by location. The committed Tranco archive is list **64X3X**, not a live ranking; preserve that ID and the collection date in reports.
 
-## Start
+## Start on Windows
+
+### Desktop window for teammates
+
+The no-code path is the `GDPR-Research-Windows-v3` ZIP attached to a successful **Build Windows desktop app** GitHub Actions run. Download and extract the whole ZIP into a new writable folder, then double-click `GDPR-Research-v3.exe`. The package is built on Windows and bundles Chromium; teammates do not need to install Python or run commands. The workflow downloads and tests its own artifact, including Chromium; a hands-on Windows website collection test is still needed before group distribution.
+
+### Mac app
+
+The **Build macOS desktop app** workflow offers two archives: `GDPR-Research-Mac-Apple-Silicon` for M-series Macs and `GDPR-Research-Mac-Intel` for Intel Macs. Download the matching artifact, extract the outer GitHub ZIP and then the enclosed `GDPR-Research-Mac-*.zip` using Archive Utility. Open `GDPR-Research-Mac.app` from Finder. The app saves its workbook and evidence under `~/Documents/GDPR-Research/`, outside the app bundle. It includes its own Chromium and Python dependencies. The build is not signed with an Apple Developer ID or notarized; macOS may block first launch. Only if you trust the downloaded app, follow Apple's **System Settings → Privacy & Security → Open Anyway** guidance. The CI checks the extracted archive and launches the bundled browser, but an actual Finder launch and live site collection on a teammate's Mac still need testing.
+
+Enter a Tranco top-100 domain or homepage URL, click **采集网站**, inspect the screenshot, fill the policy claim and Cookie purpose fields, then click the save buttons. **打开工作簿** opens the local `reports/GDPR_review.xlsx`. The app visits the domain homepage; URL paths are not part of this first pilot. It only implements the initial no-interaction visit. Data remains inside the extracted folder, and team members' separate copies do not sync automatically.
+
+For the current source version, install once with `setup.cmd` and then double-click `启动工具.cmd` to open the same interface. The command-line alternative remains available for troubleshooting.
+
+### Command-line fallback
+
+Install Python, clone the repository, then open CMD inside the project folder:
+
+```cmd
+setup.cmd
+run.cmd baidu.com
+```
+
+`setup.cmd` installs the Python packages and Chromium once. `run.cmd DOMAIN` collects one exact domain in the Tranco sample and refreshes `reports/GDPR_review.xlsx`. Open that **one workbook** to inspect the screenshot, website row and Cookie details. To refresh the workbook without visiting another site, run `.venv\Scripts\python.exe export_workbook.py`. The exporter keeps the human-edited claim and classification columns when it rebuilds the workbook. Close the workbook in Excel before refreshing it.
+
+For a five-site pilot, run `run.cmd google.com`, `run.cmd cloudflare.com`, `run.cmd microsoft.com`, `run.cmd wikipedia.org`, and `run.cmd baidu.com` one at a time. Check every screenshot for error pages and verify the site row before progressing to the full sample. If the browser is blocked or the page fails, record that outcome rather than calling it compliant or noncompliant.
+
+## Python/Linux alternative
 
 ```bash
 python prepare_sites.py
@@ -10,20 +37,21 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python -m playwright install chromium
-python collect.py --limit 1
+python collect.py --domain baidu.com
+python export_workbook.py
 ```
 
 `data/top100.json` records the exact original ranks. `results/001_google.com/evidence.json` and `initial.png` contain evidence from a fresh browser context. Run `python collect.py --limit 100` once the pilot and location are configured. The collector does not click on banners; that is deliberate for the initial pre-consent observation. `results/` is ignored by Git because page text and cookies can contain personal or session data. Review and redact evidence before sharing it.
 
-For the Baidu pilot, run `python collect.py --domain baidu.com`, then `python analyze.py results/084_baidu.com/evidence.json`. The analyzer prints cookie **names and domains**, storage **keys**, response counts, and external request **hostnames**, omitting values and full URLs. Review even this summary before sharing it. Its assessment is deliberately `inconclusive`: this first-visit evidence cannot identify which cookies are necessary or prove GDPR compliance. See `demos/baidu.md` for the remaining steps.
+For the Baidu pilot, `python analyze.py results/084_baidu.com/evidence.json` can print a redacted diagnostic summary. The workbook is the team's main record. It contains 100 site rows, a Cookie detail sheet, and compressed screenshot previews. Claim fields and cookie purposes are blank or marked unreviewed until a teammate checks the policy and evidence. The workbook excludes cookie values and full request URLs. See `demos/baidu.md` for the remaining steps.
 
 Evidence collected before the response-header fix lacks `set_cookie_detection`. For those files the analyzer reports the `Set-Cookie` response count as unknown, even if the old collector recorded zero. Re-run collection with the current script to measure that field.
 
-## CSV tables
+## Team review in the workbook
 
-Run `python export_csv.py` after collection. It creates two **local review templates** (`data/site_claims.csv` for policy claims and `data/cookie_reviews.csv` for cookie purposes) and two Excel-compatible exports (`reports/site_summary.csv` and `reports/cookie_inventory.csv`). Edit the review templates, then re-run the exporter to merge those annotations into the reports. Existing review entries are preserved and newly observed cookies are appended. `not_reviewed`/`unreviewed` means no human conclusion yet; `inconclusive` is not a compliance verdict. Record policy URLs, short verified excerpts and review dates; classify cookie purposes only with evidence. The CSVs omit raw cookie values and full request URLs, but names, domains, policy notes, and excerpts still need review before sharing. Local review templates and reports are ignored by Git.
+Fill the yellow columns on the website sheet with the policy URL, a short verified GDPR claim excerpt (if one exists), its source URL, the date, the observed consent interface and an evidence-based assessment. On the Cookie sheet, fill purpose, supporting source and classification only after checking them. Re-running `run.cmd` preserves these manual fields using the site rank/domain and Cookie identity. It refreshes observations and thumbnails from the latest local evidence. Do not edit identifiers such as rank, domain, Cookie name or path to store review notes; those columns are rebuilt from the source.
 
-In `data/site_claims.csv`, fill `claim_status`, `claim_source_url` and a short, exact `claim_excerpt` after reading the site's policy; use `policy_url` for the main policy page. A CSV stores text and links, not embedded images. The exporter places the absolute path of an existing `results/<rank>_<domain>/initial.png` in `site_summary.csv` as `screenshot_path`. Keep the PNG files alongside the evidence when transferring the report; paths from one computer may need updating on another.
+The collector currently captures only the initial, no-interaction scenario. The rejection, acceptance and withdrawal scenarios, policy discovery and LLM assistance remain future work. A Cookie name, screenshot or request hostname alone cannot establish a legal violation. Raw `results/` files can contain session values and stay local; review even the workbook before sharing its screenshots.
 
 ## Research protocol
 

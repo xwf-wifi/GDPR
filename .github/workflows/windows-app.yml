@@ -1,0 +1,61 @@
+name: Build Windows desktop app
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app.py'
+      - 'collect.py'
+      - 'export_workbook.py'
+      - 'requirements.txt'
+      - 'data/top100.json'
+      - '.github/workflows/windows-app.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install packages and browser
+        shell: cmd
+        run: |
+          python -m pip install -r requirements.txt pyinstaller
+          set PLAYWRIGHT_BROWSERS_PATH=0
+          python -m playwright install chromium
+      - name: Package the app
+        shell: pwsh
+        run: |
+          python app.py --smoke
+          $env:PLAYWRIGHT_BROWSERS_PATH = '0'
+          $browserDir = python -c "import pathlib, playwright; print(pathlib.Path(playwright.__file__).parent / 'driver' / 'package' / '.local-browsers')"
+          if (-not (Test-Path $browserDir)) { throw "Playwright browser missing: $browserDir" }
+          pyinstaller --noconfirm --onedir --windowed --name GDPR-Research-v3 --collect-all playwright --add-data "${browserDir};playwright/driver/package/.local-browsers" app.py
+          New-Item -ItemType Directory -Force dist/GDPR-Research-v3/data | Out-Null
+          Copy-Item data/top100.json dist/GDPR-Research-v3/data/top100.json
+      - name: Test packaged window and browser
+        shell: pwsh
+        run: |
+          if (-not (Get-ChildItem dist/GDPR-Research-v3/_internal/playwright/driver/package/.local-browsers -Recurse -Filter chrome-headless-shell.exe)) { throw 'Bundled Chromium missing' }
+          foreach ($mode in @('--smoke', '--self-test')) {
+            $result = Start-Process -FilePath 'dist/GDPR-Research-v3/GDPR-Research-v3.exe' -ArgumentList $mode -Wait -PassThru
+            if ($result.ExitCode -ne 0) { throw "Packaged app failed $mode with exit code $($result.ExitCode)" }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GDPR-Research-Windows-v3
+          path: dist/GDPR-Research-v3/
+          include-hidden-files: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: GDPR-Research-Windows-v3
+          path: downloaded-v3
+      - name: Verify downloaded package contains Chromium
+        shell: pwsh
+        run: |
+          $browser = Get-ChildItem downloaded-v3/_internal/playwright/driver/package/.local-browsers -Recurse -Filter chrome-headless-shell.exe -ErrorAction Stop | Select-Object -First 1
+          if (-not $browser) { throw 'Uploaded artifact omitted Chromium' }
+          $result = Start-Process -FilePath 'downloaded-v3/GDPR-Research-v3.exe' -ArgumentList '--self-test' -Wait -PassThru
+          if ($result.ExitCode -ne 0) { throw "Downloaded package failed browser self-test: $($result.ExitCode)" }
