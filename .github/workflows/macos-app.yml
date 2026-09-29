@@ -35,7 +35,7 @@ jobs:
         run: |
           browser_dir=$(python -c "import pathlib, playwright; print(pathlib.Path(playwright.__file__).parent / 'driver' / 'package' / '.local-browsers')")
           test -d "$browser_dir"
-          PLAYWRIGHT_BROWSERS_PATH=0 pyinstaller --noconfirm --onedir --windowed --name GDPR-Research-Mac --collect-all playwright --add-data 'data/top100.json:data' app.py
+          PLAYWRIGHT_BROWSERS_PATH=0 pyinstaller --noconfirm --onedir --windowed --name GDPR-Research-Mac --add-data 'data/top100.json:data' app.py
           test -f dist/GDPR-Research-Mac.app/Contents/Info.plist
           # Copy Chromium after PyInstaller signs its own files. Processing
           # Chrome's nested .app as a PyInstaller binary breaks macOS codesign.
