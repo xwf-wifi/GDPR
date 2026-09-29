@@ -1,0 +1,53 @@
+name: Build macOS desktop app
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app.py'
+      - 'collect.py'
+      - 'export_workbook.py'
+      - 'requirements.txt'
+      - 'data/top100.json'
+      - '.github/workflows/macos-app.yml'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: Apple-Silicon
+          - runner: macos-15-intel
+            arch: Intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies and Chromium
+        run: |
+          python -m pip install -r requirements.txt pyinstaller
+          PLAYWRIGHT_BROWSERS_PATH=0 python -m playwright install chromium
+      - name: Package app
+        run: |
+          browser_dir=$(python -c "import pathlib, playwright; print(pathlib.Path(playwright.__file__).parent / 'driver' / 'package' / '.local-browsers')")
+          test -d "$browser_dir"
+          PLAYWRIGHT_BROWSERS_PATH=0 pyinstaller --noconfirm --onedir --windowed --name GDPR-Research-Mac --collect-all playwright --add-data "$browser_dir:playwright/driver/package/.local-browsers" --add-data 'data/top100.json:data' app.py
+          test -f dist/GDPR-Research-Mac.app/Contents/Info.plist
+          ditto -c -k --sequesterRsrc --keepParent dist/GDPR-Research-Mac.app "GDPR-Research-Mac-${{ matrix.arch }}.zip"
+      - name: Verify downloaded archive contents and browser
+        run: |
+          mkdir extracted
+          ditto -x -k "GDPR-Research-Mac-${{ matrix.arch }}.zip" extracted
+          test -f extracted/GDPR-Research-Mac.app/Contents/Info.plist
+          test -f extracted/GDPR-Research-Mac.app/Contents/Resources/data/top100.json || test -f extracted/GDPR-Research-Mac.app/Contents/Frameworks/data/top100.json
+          find extracted/GDPR-Research-Mac.app -name 'chrome-headless-shell' -type f | grep -q .
+          extracted/GDPR-Research-Mac.app/Contents/MacOS/GDPR-Research-Mac --self-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GDPR-Research-Mac-${{ matrix.arch }}
+          path: GDPR-Research-Mac-${{ matrix.arch }}.zip
+          if-no-files-found: error
